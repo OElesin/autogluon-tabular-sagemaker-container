@@ -2,6 +2,9 @@
 
 ![Build Status](https://codebuild.eu-west-1.amazonaws.com/badges?uuid=eyJlbmNyeXB0ZWREYXRhIjoiejdGeFBYcGFCY1J3aC9HUWhwbE95ZEkrcVluZFZvNXE2aG11bDZoMzFHQnJjNmhFWVF1NlpTdUNYSzNBRXdnZ1hNd2txYVJybVhWYWtFK0xRektkN2VBPSIsIml2UGFyYW1ldGVyU3BlYyI6IlVPSldqa0VTUWo4V1M1eG0iLCJtYXRlcmlhbFNldFNlcmlhbCI6MX0%3D&branch=master)
 
+
+![AutoGluon on SageMaker](./autogluon-on-sagemaker.png)
+
 This repository is a getting-started/ready-to-use kit for deploying your own automl model with AutoGluon MxNet on SageMaker. With SageMaker, you can have
 a real-time inference endpoint or run batch predictions with batch transforms. 
 
