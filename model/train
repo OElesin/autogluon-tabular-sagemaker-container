@@ -2,24 +2,77 @@
 
 # Some boilerplate code. Sagemaker expects to have a model definition in /opt/ml/model
 # We copy the model to that location, however we don't use it in inference
-import os
 import sys
 import traceback
 import shutil
+from argparse import ArgumentParser
+import os
+import json
+import mxnet
+import autogluon as ag
+from autogluon import TabularPrediction as task
+import pandas as pd
+
 
 # These are the paths to where SageMaker mounts interesting things in your container.
+from autogluon.task.tabular_prediction import TabularDataset
+
 prefix = '/opt/ml/'
 
 input_path = prefix + 'input/data'
 output_path = os.path.join(prefix, 'output')
-model_path = os.path.join(prefix, 'model')
 param_path = os.path.join(prefix, 'input/config/hyperparameters.json')  # make it a dict with kwargs
 
+# AutoGluon Tabular Task Tuning Parameters
+# Read more: https://autogluon.mxnet.io/tutorials/tabular_prediction/tabular-indepth.html
+search_strategy = 'skopt'
+time_limits = 5 * 60  # train various models for ~2 min
+num_trials = 5
+hp_tune = True  # whether or not to do hyperparameter optimization
 
-def train():
+nn_options = {
+    'num_epochs': 20,
+    'learning_rate': ag.space.Real(1e-4, 1e-2, default=5e-4, log=True),
+    'activation': ag.space.Categorical('relu', 'softrelu', 'tanh'),
+    'layers': ag.space.Categorical([100], [1000], [200, 100], [300, 200, 100]),
+    'dropout_prob': ag.space.Real(0.0, 0.5, default=0.1),
+}
+
+gbm_options = {
+    'num_boost_round': 100,
+    'num_leaves': ag.space.Int(lower=26, upper=66, default=36),
+}
+
+hyper_parameters = {'NN': nn_options, 'GBM': gbm_options}
+
+
+def __load_input_data(path: str) -> TabularDataset:
+    """
+    Load training data as dataframe
+    :param path:
+    :return: DataFrame
+    """
+    input_data_files = os.listdir(path)
+    input_dfs = [pd.read_csv(file_path=f'{path}/{data_file}') for data_file in input_data_files]
+    return task.Dataset(df=pd.concat(input_dfs))
+
+
+def train(parameters=None):
     try:
-        os.makedirs('/opt/ml/model/', exist_ok=True)
-        shutil.copy2('/opt/program/model.pkl', '/opt/ml/model/model.pkl')
+        # load training data
+        train_data = __load_input_data(train_files)
+        test_data = __load_input_data(test_files)
+        predictor = task.fit(
+            train_data=train_data,
+            tuning_data=test_data,
+            label=label_column,
+            output_directory=model_dir,
+            time_limits=time_limits,
+            num_trials=num_trials,
+            hyperparameter_tune=hp_tune,
+            hyperparameters=hyper_parameters,
+            search_strategy=search_strategy
+        )
         print('Training complete!!')
     except Exception as e:
         # Write out an error file. This will be returned as the failureReason in the
@@ -34,7 +87,16 @@ def train():
 
 
 if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--train', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
+    parser.add_argument('--test', type=str, default=os.environ['SM_CHANNEL_TESTING'])
+    parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
+    parameters = json.loads(os.environ['SM_HPS'])
+    label_column = os.environ['SM_HP_LABEL-COLUMN']
+    args, _ = parser.parse_known_args()
+    train_files = args.train
+    test_files = args.test
+    model_dir = args.model_dir
     train()
-
     # A zero exit code causes the job to be marked a Succeeded.
     sys.exit(0)

@@ -3,33 +3,39 @@ import pickle
 import io
 import flask
 import pandas as pd
+import autogluon as ag
+from autogluon import TabularPrediction as task
+from autogluon.task.tabular_prediction import TabularPredictor
+from pandas import DataFrame
 
 model_path = os.environ['MODEL_PATH']
 
 
 # A singleton for holding the model. This simply loads the model and holds it.
 # It has a predict function that does a prediction based on the model and the input data.
-
-class ScoringService(object):
-    model = None  # Where we keep the model when it's loaded
+class AutoGluonTabularService(object):
+    """
+    Singleton for holding the AutoGluon Tabular task model.
+    It has a predict function that does inference based on the model and input data
+    """
+    model = None
 
     @classmethod
-    def get_model(cls):
-        """Get the model object for this instance, loading it if it's not already loaded."""
+    def load_model(cls) -> TabularPredictor:
+        """Load AutoGluon Tabular task model for this instance, loading it if it's not already loaded."""
         if cls.model is None:
-            with open(os.path.join(model_path, 'model.pkl'), 'rb') as f:
-                cls.model = pickle.load(f)
+            cls.model = task.load(model_path, verbosity=True)
         return cls.model
 
     @classmethod
-    def predict(cls, x):
+    def predict(cls, prediction_input: DataFrame):
         """For the input, do the predictions and return them.
 
         Args:
-            input (a pandas dataframe): The data on which to do the predictions. There will be
+            prediction_input (a pandas dataframe): The data on which to do the predictions. There will be
                 one prediction per row in the dataframe"""
-        clf = cls.get_model()
-        return clf.predict(x)
+        prediction_data = task.Dataset(df=prediction_input)
+        return cls.model.predict(prediction_data)
 
 
 # The flask app for serving predictions
@@ -40,7 +46,7 @@ app = flask.Flask(__name__)
 def ping():
     """Determine if the container is working and healthy. In this sample container, we declare
     it healthy if we can load the model successfully."""
-    health = ScoringService.get_model() is not None  # You can insert a health check here
+    health = AutoGluonTabularService.load_model() is not None  # You can insert a health check here
 
     status = 200 if health else 404
     return flask.Response(response='\n', status=status, mimetype='application/json')
@@ -65,7 +71,7 @@ def transformation():
     print('Invoked with {} records'.format(data.shape[0]))
 
     # Do the prediction
-    predictions = ScoringService.predict(data)
+    predictions = AutoGluonTabularService.predict(data)
 
     # Convert from numpy back to CSV
     out = io.StringIO()

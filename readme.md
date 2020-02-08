@@ -1,24 +1,24 @@
-# Deploy custom model on SageMaker
+# Deploy AutoGluon MxNet on SageMaker
 
-This repo is a getting-started kit for deploying your own pre-trained model. We only want to use the model in inference mode. However SageMaker let's you only deploy a model after the `fit` method is executed, so we will create a dummy training job.
+This repository is a getting-started/ready-to-use kit for deploying your own automl model with AutoGluon MxNet on SageMaker. With SageMaker, you can have
+a real-time inference endpoint or run batch predictions with batch transforms. 
 
 ## Getting started
 
 ### Host the docker image on AWS ECR
 
-* You can train your model locally or on SageMaker. Save your model by pickling it to `/model/model.pkl` in this repository.
+* You can train your model locally or on SageMaker. Your model is automatically saved to the SageMaker model directory and, packaged and uploaded to S3 by SageMaker.
 
-* Create a `model/requirements.txt` with at least the following packages:
-    * flask
-    * gevent
-    * gunicorn
+* Required packages are already included in the `requirements.txt`. We also defined the installation of some packages in the `Dockerfile`.
 
 * To get your model working make the necessary code changes in the `transformation` function in the file `/model/predictor.py`.
+
 * Run `/build_and_push.sh <image_name` to deploy the docker image to AWS Elastic Container Registry
 
 ### Deploy your model in SageMaker
+I have included an example notebook which includes how to train locally and on a SageMaker ML instance.
 
-* Start a jupyter notebook called `deploy_model.ipynb`
+* Start a jupyter notebook called [notebooks/deploy_model.ipynb](notebooks/deploy_model.ipynb)
 
 ```python
 import boto3

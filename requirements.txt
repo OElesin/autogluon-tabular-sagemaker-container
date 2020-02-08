@@ -5,6 +5,5 @@ gunicorn
 
 # dependencies for the custom model
 numpy
-scipy
-scikit-learn
 pandas
+dask

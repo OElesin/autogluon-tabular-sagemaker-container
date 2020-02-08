@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.7.6-slim-buster
 
 # first layers should be dependency install so changes in code won't cause the build to
 # start from scratch.
@@ -8,9 +8,15 @@ RUN apt-get -y update && apt-get install -y --no-install-recommends \
          wget \
          nginx \
          ca-certificates \
+         git \
+         python3-dev \
+         gcc \
     && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --no-cache-dir -r /opt/program/requirements.txt
+RUN pip install --no-cache-dir -r /opt/program/requirements.txt
+
+RUN pip install --upgrade mxnet \
+    && pip install autogluon
 
 # Set some environment variables. PYTHONUNBUFFERED keeps Python from buffering our standard
 # output stream, which means that logs can be delivered to the user quickly. PYTHONDONTWRITEBYTECODE
