@@ -1,0 +1,26 @@
+version: 0.2
+
+env:
+  variables:
+    IMAGE_REPO_NAME: image-scraper-ecr-repo
+    IMAGE_TAG: latest
+
+phases:
+  prebuild:
+    commands:
+      - set eux
+      - echo "Deploy AutoGluon SageMaker Docker Container"
+      - echo "AWS AccountID $AWS_ACCOUNT_ID"
+      - echo "AWS Default Region $AWS_DEFAULT_REGION"
+      - aws --version
+      - pip install --upgrade pip
+      - pip install --upgrade awscli
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - bash ./build_and_push.sh
+  post_build:
+    commands:
+      - echo Build completed on `date`

@@ -2,7 +2,7 @@
 
 # The argument to this script is the image name. This will be used as the image on the local
 # machine and combined with the account and region to form the repository name for ECR.
-image="${1-autogluon-tabular-data}"
+image="${1:-autogluon-tabular-data}"
 
 if [[ "${image}" == "" ]]
 then

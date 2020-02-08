@@ -4,3 +4,4 @@ __pycache__/
 *.pkl
 venv
 dask-worker-space
+notebooks/.ipynb_checkpoints
