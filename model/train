@@ -22,6 +22,7 @@ prefix = '/opt/ml/'
 input_path = prefix + 'input/data'
 output_path = os.path.join(prefix, 'output')
 param_path = os.path.join(prefix, 'input/config/hyperparameters.json')  # make it a dict with kwargs
+default_label_column = 'class'
 
 # AutoGluon Tabular Task Tuning Parameters
 # Read more: https://autogluon.mxnet.io/tutorials/tabular_prediction/tabular-indepth.html
@@ -53,7 +54,7 @@ def __load_input_data(path: str) -> TabularDataset:
     :return: DataFrame
     """
     input_data_files = os.listdir(path)
-    input_dfs = [pd.read_csv(file_path=f'{path}/{data_file}') for data_file in input_data_files]
+    input_dfs = [pd.read_csv(f'{path}/{data_file}') for data_file in input_data_files]
     return task.Dataset(df=pd.concat(input_dfs))
 
 
@@ -88,15 +89,16 @@ def train(parameters=None):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('--train', type=str, default=os.environ['SM_CHANNEL_TRAINING'])
-    parser.add_argument('--test', type=str, default=os.environ['SM_CHANNEL_TESTING'])
-    parser.add_argument('--model_dir', type=str, default=os.environ['SM_MODEL_DIR'])
-    parameters = json.loads(os.environ['SM_HPS'])
-    label_column = os.environ['SM_HP_LABEL-COLUMN']
+    parser.add_argument('--train', type=str, default='/opt/ml/input/data/training')
+    parser.add_argument('--test', type=str, default='/opt/ml/input/data/testing')
+    parser.add_argument('--model_dir', type=str, default='/opt/ml/model')
+    parameters = json.load(open(param_path))
+    label_column = parameters.get('label-column', default_label_column)
     args, _ = parser.parse_known_args()
     train_files = args.train
     test_files = args.test
     model_dir = args.model_dir
+    print(f"Parameters: {os.listdir(train_files)}")
     train()
     # A zero exit code causes the job to be marked a Succeeded.
     sys.exit(0)

@@ -31,4 +31,6 @@ ENV MODEL_PATH="/opt/ml/model"
 # Set up the program in the image
 COPY model /opt/program
 WORKDIR /opt/program
+#ENV SAGEMAKER_PROGRAM train
+#ENV SAGEMAKER_PROGRAM serve
 
