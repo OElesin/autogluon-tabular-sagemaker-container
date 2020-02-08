@@ -25,7 +25,7 @@ fi
 # Get the region defined in the current configuration (default to us-west-2 if none defined)
 # us-west-1 == ireland
 region=$(aws configure get region)
-region=${region:-us-west-1}
+region=${region:-eu-west-1}
 
 fullname="${account}.dkr.ecr.${region}.amazonaws.com/${image}:latest"
 
