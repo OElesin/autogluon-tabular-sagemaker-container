@@ -35,8 +35,8 @@ account = sess.boto_session.client('sts').get_caller_identity()['Account']
 region = sess.boto_session.region_name
 image = f'{account}.dkr.ecr.{region}.amazonaws.com/{image_tag}:latest'
 
-# this is just a dummy location. The model is called with train data. We use the current notebook as dummy train data.
-uri = sess.upload_data('./deploy_model.ipynb')
+training_data = 's3://autogluon/datasets/Inc/train.csv'
+test_data = 's3://autogluon/datasets/Inc/test.csv'
 
 artifacts = 's3://<your-bucket>/artifacts'
 sm_model = sage.estimator.Estimator(image,
@@ -45,7 +45,9 @@ sm_model = sage.estimator.Estimator(image,
                                    'ml.c4.xlarge', output_path=artifacts, sagemaker_session=sess)
 
 # Run the train program because it is expected
-sm_model.fit(uri)
+sm_model.fit(
+    {'training': training_data, 'testing': test_data}
+)
 
 # Deploy the model.
 predictor = sm_model.deploy(1, 'ml.m4.xlarge', serializer=csv_serializer)
