@@ -29,7 +29,7 @@ default_label_column = 'class'
 search_strategy = 'skopt'
 time_limits = 5 * 60  # train various models for ~2 min
 num_trials = 5
-hp_tune = False  # whether or not to do hyperparameter optimization
+hp_tune = True  # whether or not to do hyperparameter optimization
 
 nn_options = {
     'num_epochs': 20,
