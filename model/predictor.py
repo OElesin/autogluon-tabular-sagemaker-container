@@ -7,6 +7,7 @@ import autogluon as ag
 from autogluon import TabularPrediction as task
 from autogluon.task.tabular_prediction import TabularPredictor
 from pandas import DataFrame
+import json
 
 model_path = os.environ['MODEL_PATH']
 
@@ -35,6 +36,8 @@ class AutoGluonTabularService(object):
             prediction_input (a pandas dataframe): The data on which to do the predictions. There will be
                 one prediction per row in the dataframe"""
         prediction_data = task.Dataset(df=prediction_input)
+        print("Prediction Data: ")
+        print(prediction_data.head())
         return cls.model.predict(prediction_data)
 
 
@@ -59,17 +62,25 @@ def transformation():
     just means one prediction per line, since there's a single column.
     """
     data = None
-
+    print(f'Request Content Type: {flask.request.content_type}')
     # Convert from CSV to pandas
     if flask.request.content_type == 'text/csv':
         data = flask.request.data.decode('utf-8')
         s = io.StringIO(data)
-        data = pd.read_csv(s, header=None)
+        data = pd.read_csv(s)
+    # support for JSON is preferred as it comes with headers
+    elif flask.request.content_type == 'application/json':
+        raw_payload = flask.request.data.decode('utf-8')
+        print(f'Input Data: {raw_payload}')
+        payload = json.loads(raw_payload)
+        data = pd.DataFrame([payload])
     else:
-        return flask.Response(response='This predictor only supports CSV data', status=415, mimetype='text/plain')
+        return flask.Response(
+            response='This predictor only supports JSON or CSV data.  data is preferred.',
+            status=415, mimetype='text/plain'
+        )
 
     print('Invoked with {} records'.format(data.shape[0]))
-
     # Do the prediction
     predictions = AutoGluonTabularService.predict(data)
 
