@@ -61,6 +61,7 @@ def transformation():
     it to a pandas data frame for internal use and then convert the predictions back to CSV (which really
     just means one prediction per line, since there's a single column.
     """
+    AutoGluonTabularService.load_model()
     data = None
     print(f'Request Content Type: {flask.request.content_type}')
     # Convert from CSV to pandas
